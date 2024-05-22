@@ -48,7 +48,14 @@ By using the `$rebase` annotation, Stacker will rebase the given image onto the 
 stacker ./config
 ```
 
-After running the command, the file will be updated to:
+```
+  ◦ Rebasing                  file=config/my-app.yaml image=registry.example.com/my-group/my-project tag=2.3.0
+  ◦ Pushing rebased image as  file=config/my-app.yaml image=registry.example.com/my-group/my-project tag=2.3.0 rebased=registry.example.com/my-group/my-project:2.3.0
+  • Rebased image             file=config/my-app.yaml image=registry.example.com/my-group/my-project tag=2.3.0 newDigest=sha256:b8a1c2638173eb55dc30489cc0a1beb60680b5838d9eddb34bf9213ec73d3d1e
+  • Wrote back updated YAML to file file=config/my-app.yaml
+```
+
+After running the command, the rebased image will be pushed and the YAML file will be updated to:
 
 ```yaml
 # ...
@@ -58,12 +65,16 @@ spec:
     app:
       image:
         repository: registry.example.com/my-group/my-project # {"$rebase": "app:name"}
-        tag: 2.3.0@sha256:bcccf02bf92e0c766761cc7d5a1faee70b6b07578f7173d640970fe9ef6571ae # {"$rebase": "app:tag"}
+        tag: 2.3.0@sha256:b8a1c2638173eb55dc30489cc0a1beb60680b5838d9eddb34bf9213ec73d3d1e # {"$rebase": "app:tag"}
 ```
+
+The next step is to push the changes back to your Git repository, so a GitOps operator like Flux can apply the changes.
+
+Ideally this is done in a scheduled CI pipeline to keep the images up-to-date.
 
 ## Acknowledgements
 
-This tool heavily uses https://github.com/google/go-containerregistry/tree/main/cmd/crane for the image manipulation.
+This tool is based on the code from https://github.com/google/go-containerregistry/tree/main/cmd/crane for the image manipulation.
 
 ## License
 
