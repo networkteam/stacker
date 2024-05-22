@@ -20,12 +20,6 @@ import (
 	"github.com/networkteam/stacker/yaml"
 )
 
-type ctxKey int
-
-const (
-	ctxKeyConfig ctxKey = iota
-)
-
 func main() {
 	app := cli.NewApp()
 	app.Name = "stacker"
@@ -85,6 +79,9 @@ func main() {
 
 			// Get path relative to directory
 			relPath, err := filepath.Rel(directory, path)
+			if err != nil {
+				return fmt.Errorf("getting relative path: %w", err)
+			}
 
 			ctx := slogutils.WithLogger(c.Context, slog.With("file", relPath))
 
@@ -120,7 +117,7 @@ func processRebaseAnnotations(ctx context.Context, path string) error {
 	}
 	defer f.Close()
 
-	patcher, err := yaml.NewPatcher(f)
+	patcher, err := yaml.NewProcessor(f)
 	if err != nil {
 		return fmt.Errorf("opening YAML: %w", err)
 	}
@@ -148,7 +145,7 @@ func processRebaseAnnotations(ctx context.Context, path string) error {
 		logger.Info("Rebased image", "image", annotation.Name, "tag", annotation.TagWithoutDigest(), "newDigest", newDigest)
 		didRebaseAny = true
 
-		annotation.TagNode.SetString(annotation.TagWithoutDigest() + "@" + newDigest)
+		annotation.UpdateTagDigest(newDigest)
 	}
 
 	if didRebaseAny {
