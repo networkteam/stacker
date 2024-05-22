@@ -13,6 +13,7 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/hashicorp/go-multierror"
+	"github.com/mattn/go-isatty"
 	"github.com/networkteam/slogutils"
 	specsv1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/urfave/cli/v2"
@@ -45,11 +46,17 @@ func main() {
 			level = slogutils.LevelTrace
 		}
 
-		slog.SetDefault(slog.New(
-			slogutils.NewCLIHandler(os.Stderr, &slogutils.CLIHandlerOptions{
+		var handler slog.Handler
+		if isatty.IsTerminal(os.Stderr.Fd()) {
+			handler = slogutils.NewCLIHandler(os.Stderr, &slogutils.CLIHandlerOptions{
 				Level: level,
-			}),
-		))
+			})
+		} else {
+			handler = slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{
+				Level: level,
+			})
+		}
+		slog.SetDefault(slog.New(handler))
 
 		return nil
 	}

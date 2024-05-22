@@ -2,13 +2,16 @@
 
 A tool to rebase container (Docker) images instead of rebuilding them.
 
-It is based around the idea of OCI annotations for base images to just change the layers of the base image if a newer version is available.
+It is based around the idea of adding OCI annotations for base images to just replace the layers of the base image if a newer version is available.
+Have a look at [crane rebase](https://github.com/google/go-containerregistry/blob/main/cmd/crane/rebase.md) for more information.
+
+This enables updates of app images without needing a complete build and is useful e.g. when running many different apps based on the same base image(s).
 
 ## Usage
 
 ### Requirements
 
-- You need to build your app images with OCI base image annoations (e.g. with [crane rebase](https://github.com/google/go-containerregistry/blob/main/cmd/crane/rebase.md))
+- You need to build your app images with OCI base image annotations (e.g. with [crane append --set-base-image-annotations](https://github.com/google/go-containerregistry/blob/main/cmd/crane/doc/crane_append.md))
 - The `FROM` image in your app Dockerfile should point to a base image tag that is updated as an alias (e.g. `:1` or `:latest`)
 - You need to include `{"$rebase": "[identifier]:name"}` and `{"$rebase": "[identifier]:tag"}` annotations as comments in a YAML file, where `identifier` needs to be unique per file
 
@@ -71,6 +74,27 @@ spec:
 The next step is to push the changes back to your Git repository, so a GitOps operator like Flux can apply the changes.
 
 Ideally this is done in a scheduled CI pipeline to keep the images up-to-date.
+
+### CLI
+
+```
+NAME:
+   stacker - Automatic rebasing of images using OCI base image annotations
+
+USAGE:
+   cmd [global options] command [command options] [directory]
+
+DESCRIPTION:
+   Recurses through the given directory to find YAML files with a rebase annotation and rebases the image onto the newest base image.
+
+COMMANDS:
+   help, h  Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --help, -h             show help (default: false)
+   --super-verbose, --vv  Enable super verbose logging (default: false)
+   --verbose, -v          Enable verbose logging (default: false)
+```
 
 ## Acknowledgements
 
